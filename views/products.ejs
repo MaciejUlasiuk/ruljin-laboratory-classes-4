@@ -13,6 +13,8 @@
         <% products.forEach(product => { %>
         <li>
           Name: <%= product.name %>, Description: <%= product.description %>
+          <a href="/products/<%= encodeURIComponent(product.name) %>">Details</a>
+          <button onclick="deleteProduct('<%= product.name %>')">Delete</button>
         </li>
         <% }); %>
       </ul>
@@ -21,23 +23,33 @@
       <div>No products available.</div>
       <% }%>
     </main>
-  </body>
-  <script>
-    function deleteProduct(name) {
-      if (!confirm(`Are you sure you want to remove ${name}?`)) {
-        return;
-      }
-
-      fetch(`/products/${name}`, {
-        method: "DELETE",
-      }).then((response) => {
-        console.log(response);
-        if (response.ok) {
-          window.location.reload();
-        } else {
-          alert("Error while removing product.");
+    <script>
+      function deleteProduct(name) {
+        const encodedName = encodeURIComponent(name);
+        if (!confirm(`Are you sure you want to remove ${name}?`)) {
+          return;
         }
-      });
-    }
-  </script>
+
+        fetch(`/products/${encodedName}`, { 
+          method: "DELETE",
+        }).then((response) => {
+          console.log(response);
+          if (response.ok) {
+             response.json().then(data => {
+                if(data.success) {
+                    window.location.reload();
+                } else {
+                    alert("Error while removing product (server confirmation failed).");
+                }
+             });
+          } else {
+            alert("Error while removing product (request failed).");
+          }
+        }).catch(error => {
+            console.error('Fetch error:', error);
+            alert("Error communicating with the server.");
+        });
+      }
+    </script>
+  </body>
 </html>
